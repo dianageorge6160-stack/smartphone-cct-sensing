@@ -2,66 +2,18 @@
 
 独立的原生 Android 应用，包名 `cn.colortemperature.meter`，最低 Android 11。安装包为 `ColorTemperature-0.1.5.apk`，对应源码包为 `ColorTemperature-0.1.5-source.zip`。
 
-0.1.5 底栏第三项改为设置（齿轮图标），设置依次提供传感器、语言、关于。原有传感器数据、诊断复制及通道映射迁入「设置 → 传感器」，测量卡片仍可直接进入该页。子页面支持页面按钮和系统返回。语言可选简体中文 / English，选择保存到本机并立即重建界面；界面、状态、弹窗、图表、诊断、记录导出和协议内容均提供中英文，用户备注与系统返回的传感器名称保持原文。
-
-关于页从安装包读取当前版本号，制作、设计、工程、测试均署名 PATRICK STAR。隐私协议与使用条款可在「设置 → 关于」中离线阅读，生效日期为 2026-11-08。仓库中的 [PRIVACY.md](PRIVACY.md) 和 [TERMS.md](TERMS.md) 与应用展示的中英文正文一致。协议按当前实际功能描述本机记录、传感器数据、复制诊断、主动分享和数据删除，不需要新增权限或联网。
-
-0.1.4 环境照度改为只订阅系统后置光线接口，识别 `back_lux`、`lux_b`、`rear light`、`back ambient` 等名称，优先采用标准 TYPE_LIGHT 与非唤醒接口。首页显示实际后置传感器名称，传感器页显示其原始事件；保存记录包含照度来源和采样时间。未开放后置接口、订阅失败、无事件或数据无效时分别显示状态。不会用位置未知的默认、前置或融合光线接口替代后置读数。
-
-0.1.3 改为逐事件实时采样：界面和新保存记录使用最新一次有效 CCT 原值；趋势记录每次有效事件，保留最近 60 个点。传感器请求约 20 ms 的事件周期、零批处理延迟，实际更新速度由硬件和系统决定；界面在下一显示帧呈现最新读数，采样时间显示到毫秒。
-
-0.1.2 底栏改为传统的全宽固定布局，三个图标等宽排列，使用颜色和短线表示选中页，不显示中文标签。去除底栏投影、点按波纹和背景阴影，保留图标按下缩小、松开回弹的效果；系统关闭动画时不播放回弹。读屏保留功能名称与选中状态。移除顶部帮助入口、弹窗及机型介绍文案。
-
 ## 功能
 
 - 测量页：相关色温 K、暖 / 中性 / 冷光分类、暖冷色带、环境照度、最近 60 个采样点的趋势。
 - 暂停 / 继续：暂停时取消订阅，保留读数；继续时清除旧会话并重新接收数据。离开前台也取消订阅。
 - 本机记录：保存按钮点击时锁定读数，填写备注后保存，最多 100 条。支持查看、复制、删除和通过系统分享导出文本。
-- 设置 → 传感器：显示系统枚举的传感器、具名 CCT 接口的原始事件、订阅结果、手动选择数据源和通道、一键复制完整诊断。
-- 设置 → 语言 / 关于：保存中英文选择，展示版本、PATRICK STAR 署名、离线隐私协议和使用条款。
-- 浅色 / 深色跟随系统。界面使用 Material 3 Expressive 的设计方向：浅绿配色、大号读数、大圆角容器、胶囊按钮、底部三栏导航、触觉反馈、系统边缘区域适配。采用 Android 原生 View 实现，未引入 Material 组件库，也不要求手机升级到 Android 17。当前 compile / target SDK 为 34。
-- 无联网、相机、存储或短信权限，无后台服务。导出通过用户主动打开的系统分享界面完成。
+## Color Temperature 0.1.5
+A standalone native Android app with the package name cn.colortemperature.meter. Requires Android 11 or later. The installation package is ColorTemperature-0.1.5.apk, and the corresponding source archive is ColorTemperature-0.1.5-source.zip.
+Features
+- Measurement: correlated color temperature in kelvin (K), warm / neutral / cool light classification, a warm-to-cool color scale, illuminance, and a trend chart showing the latest 60 samples.
+- Pause / Resume: pausing unsubscribes from sensor events and retains the current readings. Resuming clears the previous session and starts receiving new data. Subscriptions also stop when the app leaves the foreground.
+- Local history: tapping Save captures the current reading. Add an optional note and save up to 100 records. Records can be viewed, copied, deleted, or exported as text through the system share sheet.
+Sensor Implementation and Current Limitations
+Color temperature is exposed through vendor-specific sensor interfaces. Availability to ordinary apps and the format of event channels depend on the device system.
 
-## 实机测试
-
-1. 安装 APK 后打开应用，保持后置感光区域无遮挡，等待约 8 秒。
-2. 观察是否出现 K 读数，再切换暖色灯 / 日光环境，确认读数随光线变化。较低 K 对应暖光，较高 K 对应冷光。
-3. 测试暂停、继续、保存备注及记录页。暂停后保留的是暂停前的采样，时间会显示在卡片上。
-4. 如果没有读数，打开「设置 → 传感器」，等待几秒后点击「复制诊断」，把诊断文本发回。无需 ADB、Root 或相机权限。
-5. 若需要进一步适配，可在「适配设置」选择具名 CCT 源及通道。不要把 RGB、照度或 ADC 计数直接当作开尔文。
-
-## 传感器实现与当前限制
-
-色温属于厂商传感器接口，是否可供普通应用读取及事件通道格式取决于设备系统。
-
-本版通过 `SensorManager.getSensorList(Sensor.TYPE_ALL)` 查找名称 / stringType 包含 `CCT` 或 `color temperature` 的接口，优先采用后置、非唤醒源。自动模式订阅非工厂 CCT 源；工厂或 stream / strm / raw 源不自动解释，只有用户手动选择时才订阅。订阅失败、无事件、数据无效分别显示状态，并保留诊断。
-
-**默认把具名 CCT 源的 `values[0]` 按 K 解释，通道和单位仍需实机验证。** 不扫描其他通道猜测色温，不使用普通照度推算，不使用相机或模拟数据。只接受 1000–25000 的有限数值；这个范围只是异常值过滤，不能证明单位、精度或校准正确。多通道原始流需要确认厂商协议后适配。
-
-每次收到有效 CCT 事件后，直接替换当前色温值，不对多个采样值求平均或中位数，也不做平滑处理。趋势图记录每次有效事件，不再按固定时间间隔抽取样本；诊断和新保存记录均保留当次原值，既有记录不改写。不同 CCT 源切换时清空趋势，避免混合来源。连续型接口超过 10 秒无更新时隐藏当前数值并禁用保存；on-change 型接口允许环境不变时不发新事件，采样时间始终可见。
-
-照度独立识别名称或 stringType 明确表示后置光线的接口；CCT、工厂原始流、前置及位置未知的默认光线接口不参与照度采样。标准 TYPE_LIGHT 使用 `values[0]` 的 lx 原值；具名厂商后置照度接口也暂按第 0 通道的 lx 解释，实际通道、单位及后置位置仍需设备实机验证。收到事件即更新最新单次原值，不做平滑；0 lx 是有效值，负数或非有限值无效。连续型后置接口超过 10 秒无更新后隐藏照度，新保存记录不包含失效读数；暂停保留当时有效的后置照度。照度和色温可能在不同时间上报，记录中分别保留两者的采样时间。
-
-## 构建与验证
-
-需要 PowerShell、JDK 17、Android SDK Platform 34、Build Tools 34.0.0。无需 Gradle 和网络依赖：
-
-```powershell
-./build.ps1 -Sdk 'F:\android SDK' -Jdk 'C:\Program Files\Java\jdk-17'
-```
-
-构建脚本先运行传感器识别、后置照度选择、通道处理、中英文资源完整性、格式参数及协议正文一致性检查，然后编译 Java、打包 DEX、对齐 APK、使用本项目本地调试密钥签名并校验签名。每次构建使用独立输出目录，密钥位于 `build/debug.keystore`，后续版本需继续使用同一密钥才能覆盖安装。
-
-构建成功后自动生成与 APK 同版本的源码 ZIP。源码包包含 `app/src`、测试、构建与打包脚本、README、中英文隐私协议和条款文档、`.gitignore`，排除构建缓存、APK、签名密钥和 Git 元数据。解压后可将项目目录内的内容上传至 GitHub 仓库。`release-info.json` 记录对应 APK 的版本和 SHA-256，方便核对。
-
-已有对应 APK 时，也可单独运行 `./package-source.ps1` 重新生成源码 ZIP。每次交付均同时提供 APK 和源码 ZIP。
-
-已完成：Java 编译、传感器规则检查、APK 打包与签名校验。尚未完成：设备实机接口、测量精度和界面显示验证。用户自行安装测试。
-
-## 参考
-
-- [Android Sensors Overview：枚举传感器与监听事件](https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview)
-- [Android SensorManager API](https://developer.android.com/reference/android/hardware/SensorManager)
-- [Android SensorEvent：TYPE_LIGHT 的原始照度单位](https://developer.android.com/reference/android/hardware/SensorEvent#values)
-- [Google Material 3 / Expressive 设计说明](https://developer.android.com/develop/ui/compose/designsystems/material3)
-- [Android 17 官方功能说明](https://developer.android.com/about/versions/17/features)
+This version uses SensorManager.getSensorList(Sensor.TYPE_ALL) to find interfaces whose names or stringType values contain CCT or color temperature, prioritizing rear-facing, non-wake-up sensors. Automatic mode subscribes to non-factory CCT sources. Factory interfaces and sources marked stream, strm, or raw are subscribed to only when manually selected; their data is not interpreted automatically. Subscription failures, missing events, and invalid data are shown as distinct states, with diagnostic information retained.
